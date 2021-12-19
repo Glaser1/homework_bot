@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import requests
 import exceptions
@@ -8,7 +9,6 @@ from dotenv import load_dotenv
 
 import telegram
 
-
 load_dotenv()
 
 logging.basicConfig(
@@ -17,6 +17,9 @@ logging.basicConfig(
     filemode='w',
     format='%(asctime)s, %(levelname)s, %(message)s'
 )
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler(stream=sys.stdout)
+logger.addHandler(handler)
 
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -34,21 +37,27 @@ HOMEWORK_STATUSES = {
 
 
 def send_message(bot, message):
+    """Отправка сообщения в Telegram-чат."""
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
         logging.info(f' Бот отправил сообщение: {message}')
-    except exceptions.UnableToSendMessage(f'Ошибка при отправке сообщения: {message}') as error:
+    except exceptions.UnableToSendMessage(
+            f'Ошибка при отправке сообщения: {message}'
+    ) as error:
         logging.error(error)
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=error)
         logging.info(f' Бот отправил сообщение: {error}')
 
 
 def get_api_answer(current_timestamp):
+    """Запрос к API-сервису."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     response = requests.get(ENDPOINT, headers=HEADERS, params=params)
     if response.status_code != 200:
-        logging.error(f'Эндпоит недоступен: Код ответа API: {response.status_code}')
+        logging.error(
+            f'Эндпоит недоступен: Код ответа API: {response.status_code}'
+        )
         raise exceptions.UnexpectedStatusCode()
     try:
         return response.json()
@@ -57,6 +66,7 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
+    """Проверка ответа API."""
     if not isinstance(response, dict):
         logging.error('Ответ API не соответствует ожидаемому')
         raise TypeError
@@ -70,6 +80,7 @@ def check_response(response):
 
 
 def parse_status(homework):
+    """Получение статуса конкретной домашней работы."""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
     if 'homework_name' not in homework.keys():
@@ -86,6 +97,7 @@ def parse_status(homework):
 
 
 def check_tokens():
+    """Проверка переменных окружения."""
     if TELEGRAM_TOKEN and PRACTICUM_TOKEN and TELEGRAM_CHAT_ID:
         return True
     else:
