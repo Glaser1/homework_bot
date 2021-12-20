@@ -103,7 +103,7 @@ def check_tokens():
     else:
         return True
 
-    
+
 def main():
     """Основная логика работы бота."""
     check_tokens()
