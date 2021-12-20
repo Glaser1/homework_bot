@@ -7,7 +7,7 @@ import logging
 
 from dotenv import load_dotenv
 
-import telegram
+from telegram import Bot
 
 load_dotenv()
 
@@ -25,8 +25,8 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-RETRY_TIME = 5
-ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
+RETRY_TIME = 600
+PRACTICUM_ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 HOMEWORK_STATUSES = {
@@ -45,24 +45,21 @@ def send_message(bot, message):
             f'Ошибка при отправке сообщения: {message}'
     ) as error:
         logging.error(error)
-        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=error)
-        logging.info(f' Бот отправил сообщение: {error}')
 
 
 def get_api_answer(current_timestamp):
     """Запрос к API-сервису."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
-    response = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    if response.status_code != 200:
-        logging.error(
-            f'Эндпоит недоступен: Код ответа API: {response.status_code}'
-        )
-        raise exceptions.UnexpectedStatusCode()
+
     try:
+        response = requests.get(PRACTICUM_ENDPOINT, headers=HEADERS, params=params)
+        if response.status_code != 200:
+            logging.info('Статус-код ответа отличается от ожидаемого')
+            raise exceptions.UnexpectedStatusCode
         return response.json()
-    except Exception as error:
-        logging.info(f' Сбой при запросе к эндпоинту {error}')
+    except TypeError as error:
+        logging.error(error)
 
 
 def check_response(response):
@@ -74,7 +71,7 @@ def check_response(response):
         logging.error('Ответ API не соответствует ожидаемому')
         raise KeyError
     try:
-        return response.get('homeworks')
+        return response['homeworks']
     except KeyError:
         logging.error('Несуществующий ключ')
 
@@ -83,10 +80,10 @@ def parse_status(homework):
     """Получение статуса конкретной домашней работы."""
     homework_name = homework.get('homework_name')
     homework_status = homework.get('status')
-    if 'homework_name' not in homework.keys():
+    if 'homework_name' not in homework:
         logging.error('Несуществующий ключ')
         raise KeyError
-    if 'status' not in homework.keys():
+    if 'status' not in homework:
         logging.error('Несуществующий ключ')
         raise KeyError
     if homework_status not in HOMEWORK_STATUSES:
@@ -108,26 +105,26 @@ def check_tokens():
 def main():
     """Основная логика работы бота."""
     check_tokens()
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    bot = Bot(token=TELEGRAM_TOKEN)
+    start_review_stamp = 1639774800
+    response = get_api_answer(start_review_stamp)
+    check = check_response(response)
+    status = check[0]['status']
     while True:
         try:
-            response = get_api_answer(163163153)
+            response = get_api_answer(start_review_stamp)
             check = check_response(response)
-            status = check[0].get('status')
+            if check[0]['status'] != status:
+                status = check[0]['status']
+                send_message(bot, parse_status(check[0]))
+            else:
+                logging.debug('Отсутствие в ответе нового статуса')
+                send_message(bot, f'Отсутствие в работе {check[0]["homework_name"]} нового статуса')
             time.sleep(RETRY_TIME)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logging.error(message)
             send_message(bot, message)
-            time.sleep(RETRY_TIME)
-        else:
-            response2 = get_api_answer(163163153)
-            check2 = check_response(response2)
-            status2 = check2[0].get('status')
-            if status != status2:
-                send_message(bot, parse_status(check2[0]))
-            else:
-                logging.debug('Отсутствие в ответе нового статуса')
             time.sleep(RETRY_TIME)
 
 
