@@ -121,7 +121,7 @@ def main():
                 logging.debug('Отсутствие в ответе нового статуса')
                 send_message(
                     bot, 
-                    f'Отсутствие в работе {check[0]["homework_name"]} нового статуса'
+                    'Отсутствие в работе '
                 )
             time.sleep(RETRY_TIME)
         except Exception as error:
