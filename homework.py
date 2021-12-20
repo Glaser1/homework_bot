@@ -26,7 +26,7 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 RETRY_TIME = 600
-PRACTICUM_ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
+ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 HOMEWORK_STATUSES = {
@@ -53,7 +53,7 @@ def get_api_answer(current_timestamp):
     params = {'from_date': timestamp}
 
     try:
-        response = requests.get(PRACTICUM_ENDPOINT, headers=HEADERS, params=params)
+        response = requests.get(ENDPOINT, headers=HEADERS, params=params)
         if response.status_code != 200:
             logging.info('Статус-код ответа отличается от ожидаемого')
             raise exceptions.UnexpectedStatusCode
@@ -119,7 +119,10 @@ def main():
                 send_message(bot, parse_status(check[0]))
             else:
                 logging.debug('Отсутствие в ответе нового статуса')
-                send_message(bot, f'Отсутствие в работе {check[0]["homework_name"]} нового статуса')
+                send_message(
+                    bot, 
+                    f'Отсутствие в работе {check[0]["homework_name"]} нового статуса'
+                )
             time.sleep(RETRY_TIME)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
