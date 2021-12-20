@@ -100,9 +100,8 @@ def check_tokens():
     if not all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
         logging.critical('Отсутствует переменная окружения')
         return False
-    if all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
+    else:
         return True
-
 
 def main():
     """Основная логика работы бота."""
