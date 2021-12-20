@@ -119,7 +119,7 @@ def main():
                 send_message(bot, parse_status(check[0]))
             else:
                 logging.debug('Отсутствие в ответе нового статуса')
-                send_message(bot, 
+                send_message(bot,
                              'Отсутствие в работе нового статуса'
                              )
             time.sleep(RETRY_TIME)
