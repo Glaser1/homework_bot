@@ -106,7 +106,7 @@ def main():
     """Основная логика работы бота."""
     check_tokens()
     bot = Bot(token=TELEGRAM_TOKEN)
-    start_review_stamp = 1639774800
+    start_review_stamp = 1630443600
     response = get_api_answer(start_review_stamp)
     check = check_response(response)
     status = check[0]['status']
