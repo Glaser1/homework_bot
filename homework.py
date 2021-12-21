@@ -28,7 +28,7 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 tokens = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
 
 RETRY_TIME = 600
-ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
+PRACTICUM_ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 HOMEWORK_STATUSES = {
@@ -55,12 +55,12 @@ def get_api_answer(current_timestamp):
     params = {'from_date': timestamp}
 
     try:
-        response = requests.get(ENDPOINT, headers=HEADERS, params=params)
+        response = requests.get(PRACTICUM_ENDPOINT, headers=HEADERS, params=params)
         if response.status_code != 200:
             logging.info('Статус-код ответа отличается от ожидаемого')
             raise exceptions.UnexpectedStatusCode
         return response.json()
-    except TypeError as error:
+    except requests.exceptions.RequestException as error:
         logging.error(error)
 
 
@@ -100,8 +100,8 @@ def check_tokens():
     if not all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
         logging.critical('Отсутствует переменная окружения')
         return False
-    else:
-        return True
+    
+    return True
 
 
 def main():
