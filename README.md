@@ -18,7 +18,7 @@ git clone https://github.com/Glaser1/homework_bot.git
 Cоздать и активировать виртуальное окружение:
 
 ```
-python -m venv env
+python -m venv venv
 ```
 
 ```
