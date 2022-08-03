@@ -42,8 +42,11 @@ python manage.py migrate
 ```
 
 Создать .env-файл со строками:
+
 ``` PRACTICUM_TOKEN = <Токен вашего Яндекс.Практикум аккаунта> ```
+
 ``` TELEGRAM_TOKEN = <Токен вашего telegram-бота> ```
+
 ``` TELEGRAM_CHAT_ID = <id вашего telegram-аккаунта> ```
 
 Запустить проект:
